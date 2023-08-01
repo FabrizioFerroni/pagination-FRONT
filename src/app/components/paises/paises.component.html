@@ -1,0 +1,274 @@
+<div class="container mt-3">
+  <h2 class="pb-2">Listado de paises</h2>
+
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center justify-content-center">
+      <select
+        class="form-select outnone"
+        aria-label="Default select example"
+        (change)="changeSize($event)"
+        *ngIf="content.length >= 1"
+      >
+        <!-- <option [selected]="size === 5" value="5">5</option>
+        <option [selected]="size === 10" value="10">10</option>
+        <option [selected]="size === 15" value="15">15</option>
+        <option [selected]="size === 25" value="25">25</option> -->
+        <!-- Genera las opciones de tamaño de página de manera dinámica -->
+        <ng-container *ngFor="let pageSize of pageSizes">
+          <option
+            [selected]="getCurrentPageSize() === pageSize"
+            [value]="pageSize"
+          >
+            {{ pageSize === totalElements ? "Todos" : pageSize }}
+          </option>
+        </ng-container>
+        <option [selected]="size === totalElements" value="total">Todos</option>
+        <!-- Opción especial para "Todos" -->
+        <!-- <option
+          [selected]="getCurrentPageSize() === totalElements"
+          [value]="totalElements"
+        >
+          Todos
+        </option> -->
+      </select>
+    </div>
+    <button
+      *ngIf="isAdmin"
+      class="btn btn-{{ borrado ? 'success' : 'danger' }}"
+      (click)="viewBorrado()"
+    >
+      {{ borrado ? "Ver registros" : "Ver registros borrados" }}
+    </button>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">
+          <a href="#" class="text-black ordenados" (click)="sort('id')"
+            ><i class="fas fa-sort"></i
+          ></a>
+          Id
+        </th>
+        <th scope="col">
+          <a href="#" class="text-black ordenados" (click)="sort('nombre')"
+            ><i class="fas fa-sort"></i
+          ></a>
+          Nombre
+        </th>
+        <th scope="col">
+          <a href="#" class="text-black ordenados" (click)="sort('capital')"
+            ><i class="fas fa-sort"></i
+          ></a>
+          Capital
+        </th>
+        <th [width]="19" *ngIf="isAdmin"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="content.length < 1">
+        <td colspan="4" class="text-center" *ngIf="isAdmin">
+          No hay registros para mostrar
+        </td>
+        <td colspan="3" class="text-center" *ngIf="!isAdmin">
+          No hay registros para mostrar
+        </td>
+      </tr>
+      <tr *ngFor="let item of content">
+        <td scope="row">{{ item.id }}</td>
+        <td>{{ item.nombre }}</td>
+        <td>{{ item.capital }}</td>
+        <td *ngIf="isAdmin">
+          <button
+            title="{{ borrado ? 'Restaurar' : 'Eliminar' }}"
+            class="btn btn-{{ borrado ? 'warning' : 'danger' }} {{
+              borrado ? 'text-white' : ''
+            }}"
+            (click)="deletePais(item.id)"
+          >
+            <i class="fas fa-{{ borrado ? 'recycle' : 'trash' }}"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div
+    class="d-flex justify-content-between align-items-center border-1"
+    *ngIf="content.length >= 1"
+  >
+    <p>{{ getShowingResultsMessage() }}</p>
+
+    <!-- <nav aria-label="Page navigation example">
+      <ul class="pagination d-flex justify-content-end">
+        <li class="page-item outnone {{ isFirst ? 'disabled' : '' }}">
+          <a class="page-link outnone" href="#" (click)="First()"
+            >&laquo; Primero</a
+          >
+        </li>
+        <li class="page-item outnone {{ isFirst ? 'disabled' : '' }}">
+          <a class="page-link outnone" href="#" (click)="rewind()"
+            >&laquo; Anterior</a
+          >
+        </li>
+        <li
+          class="page-item outnone {{ i === page ? 'active' : '' }}"
+          *ngFor="let p of totalPages; let i = index"
+        >
+          <a class="page-link outnone" href="#" (click)="setPage(i)">{{
+            i + 1
+          }}</a>
+        </li>
+        <li class="page-item outnone {{ isLast ? 'disabled' : '' }}">
+          <a class="page-link outnone" href="#" (click)="forward()"
+            >Próximo &raquo;</a
+          >
+        </li>
+        <li class="page-item outnone {{ isLast ? 'disabled' : '' }}">
+          <a class="page-link outnone" href="#" (click)="Last()"
+            >Ultimo &raquo;</a
+          >
+        </li>
+      </ul>
+    </nav> -->
+
+    <!-- <nav aria-label="Page navigation example">
+      <ul class="pagination d-flex justify-content-end">
+        <li class="page-item outnone" [ngClass]="{ disabled: isFirst }">
+          <a class="page-link outnone" href="#" (click)="First()"
+            >&laquo; Primero</a
+          >
+        </li>
+        <li class="page-item outnone" [ngClass]="{ disabled: isFirst }">
+          <a class="page-link outnone" href="#" (click)="rewind()"
+            >&laquo; Anterior</a
+          >
+        </li>
+        <ng-container *ngFor="let page of visiblePagesBefore">
+          <li
+            class="page-item outnone"
+            *ngIf="page !== 0"
+            [ngClass]="{ active: page === currentPage }"
+          >
+            <a class="page-link outnone" href="#" (click)="setPage(page)">{{
+              page
+            }}</a>
+          </li>
+          <li class="page-item outnone" *ngIf="page === 0">
+            <span class="page-link outnone">...</span>
+          </li>
+        </ng-container>
+        <ng-container *ngFor="let page of visiblePagesAfter">
+          <li class="page-item outnone" *ngIf="page === 0">
+            <span class="page-link outnone">...</span>
+          </li>
+          <li
+            class="page-item outnone"
+            *ngIf="page !== 0"
+            [ngClass]="{ active: page === currentPage }"
+          >
+            <a class="page-link outnone" href="#" (click)="setPage(page)">{{
+              page
+            }}</a>
+          </li>
+        </ng-container>
+        <li class="page-item outnone" [ngClass]="{ disabled: isLast }">
+          <a class="page-link outnone" href="#" (click)="forward()"
+            >Próximo &raquo;</a
+          >
+        </li>
+        <li class="page-item outnone" [ngClass]="{ disabled: isLast }">
+          <a class="page-link outnone" href="#" (click)="Last()"
+            >Último &raquo;</a
+          >
+        </li>
+      </ul>
+    </nav> -->
+
+    <nav aria-label="Page navigation example">
+      <ul class="pagination d-flex justify-content-end">
+        <!-- <li class="page-item outnone" [ngClass]="{ disabled: isFirst }">
+          <a class="page-link outnone" href="#" (click)="First()"
+            >&laquo; Primero</a
+          >
+        </li>
+        <li class="page-item outnone" [ngClass]="{ disabled: isFirst }">
+          <a class="page-link outnone" href="#" (click)="rewind()"
+            >&laquo; Anterior</a
+          >
+        </li> -->
+        <li
+          class="page-item outnone"
+          [ngClass]="{ disabled: isFirst || isFirstPage }"
+        >
+          <a class="page-link outnone" href="#" (click)="First()"
+            >&laquo; Primero</a
+          >
+        </li>
+        <li
+          class="page-item outnone"
+          [ngClass]="{ disabled: isFirst || isFirstPage }"
+        >
+          <a class="page-link outnone" href="#" (click)="rewind()"
+            >&laquo; Anterior</a
+          >
+        </li>
+
+        <ng-container *ngFor="let page of visiblePagesBefore">
+          <li
+            class="page-item outnone"
+            *ngIf="page !== 0"
+            [ngClass]="{ active: page === currentPage }"
+          >
+            <a class="page-link outnone" href="#" (click)="setPage(page)">{{
+              page
+            }}</a>
+          </li>
+          <li class="page-item outnone" *ngIf="page === 0">
+            <span class="page-link outnone">...</span>
+          </li>
+        </ng-container>
+        <ng-container *ngFor="let page of visiblePagesAfter">
+          <li class="page-item outnone" *ngIf="page === 0">
+            <span class="page-link outnone">...</span>
+          </li>
+          <li
+            class="page-item outnone"
+            *ngIf="page !== 0"
+            [ngClass]="{ active: page === currentPage }"
+          >
+            <a class="page-link outnone" href="#" (click)="setPage(page)">{{
+              page
+            }}</a>
+          </li>
+        </ng-container>
+
+        <li class="page-item outnone" [ngClass]="{ disabled: isLast }">
+          <a class="page-link outnone" href="#" (click)="forward()"
+            >Próximo &raquo;</a
+          >
+        </li>
+        <li class="page-item outnone" [ngClass]="{ disabled: isLast }">
+          <a class="page-link outnone" href="#" (click)="Last()"
+            >Último &raquo;</a
+          >
+        </li>
+
+        <!-- <li
+          class="page-item outnone"
+          [ngClass]="{ disabled: isLast || isLastPage }"
+        >
+          <a class="page-link outnone" href="#" (click)="forward()"
+            >Próximo &raquo;</a
+          >
+        </li>
+        <li
+          class="page-item outnone"
+          [ngClass]="{ disabled: isLast || isLastPage }"
+        >
+          <a class="page-link outnone" href="#" (click)="Last()"
+            >Último &raquo;</a
+          >
+        </li> -->
+      </ul>
+    </nav>
+  </div>
+</div>
